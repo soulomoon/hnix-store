@@ -1,4 +1,4 @@
-{-# language DataKinds           #-}
+{-# language DataKinds #-}
 
 module Derivation where
 
@@ -12,6 +12,7 @@ import           System.Nix.StorePath           ( StorePath
 import           System.Nix.Store.Remote        ( MonadStore
                                                 , addToStore
                                                 , addTextToStore
+                                                , filePathToNar
                                                 )
 import qualified Data.Map
 import qualified Data.Set
@@ -41,7 +42,7 @@ withBash action = do
     Nothing -> error "No bash executable found"
     Just fp -> do
       let Right n = System.Nix.StorePath.makeStorePathName "bash"
-      pth <- addToStore @SHA256 n fp False (pure True) False
+      pth <- addToStore @SHA256 n (filePathToNar fp) False (pure True) False
       action pth
 
 withBuildScript :: (StorePath -> MonadStore a) -> MonadStore a

@@ -4,6 +4,8 @@
 {-# language ScopedTypeVariables #-}
 {-# language DataKinds           #-}
 {-# language RecordWildCards     #-}
+{-# language LiberalTypeSynonyms #-}
+
 module System.Nix.Store.Remote
   ( addToStore
   , addTextToStore
@@ -29,6 +31,7 @@ module System.Nix.Store.Remote
   , runStore
   , syncWithGC
   , verifyStore
+  , filePathToNar
   , module System.Nix.Store.Remote.Types
   )
 where
@@ -63,40 +66,43 @@ import qualified System.Nix.Nar
 import qualified System.Nix.StorePath
 import qualified System.Nix.Store.Remote.Parsers
 
+import qualified Control.Monad.IO.Class          as IO
 import           System.Nix.Store.Remote.Binary
 import           System.Nix.Store.Remote.Types
 import           System.Nix.Store.Remote.Protocol
 import           System.Nix.Store.Remote.Util
 import           Crypto.Hash                    ( SHA256 )
+import           System.Nix.Nar                 ( NarSource )
 
 type RepairFlag = Bool
 type CheckFlag = Bool
 type SubstituteFlag = Bool
 
--- | Pack `FilePath` as `Nar` and add it to the store.
+
+-- | fileToNar
+-- build a Source that turn file path to nar using narEffectsIO.
+filePathToNar :: forall m . IO.MonadIO m => FilePath -> NarSource m
+filePathToNar = System.Nix.Nar.streamNarIO System.Nix.Nar.narEffectsIO
+
+
+-- | Pack `Nar` and add it to the store.
 addToStore
   :: forall a
-   . NamedAlgo a
+   . (NamedAlgo a)
   => StorePathName        -- ^ Name part of the newly created `StorePath`
-  -> FilePath             -- ^ Local `FilePath` to add
+  -> NarSource MonadStore -- ^ provide nar stream
   -> Bool                 -- ^ Add target directory recursively
   -> (FilePath -> Bool)   -- ^ Path filter function
   -> RepairFlag           -- ^ Only used by local store backend
   -> MonadStore StorePath
-addToStore name pth recursive _pathFilter _repair = do
-
+addToStore name source recursive _pathFilter _repair = do
   runOpArgsIO AddToStore $ \yield -> do
     yield $ toStrict $ Data.Binary.Put.runPut $ do
       putText $ System.Nix.StorePath.unStorePathName name
-
       putBool $ not $ System.Nix.Hash.algoName @a == "sha256" && recursive
-
       putBool recursive
-
       putText $ System.Nix.Hash.algoName @a
-
-    System.Nix.Nar.streamNarIO yield System.Nix.Nar.narEffectsIO pth
-
+    source yield
   sockGetPath
 
 -- | Add text to store.
