@@ -49,7 +49,7 @@ import           System.Nix.Hash                ( NamedAlgo(..)
                                                 , decodeDigestWith
                                                 )
 import           System.Nix.StorePath           ( StorePath
-                                                , StorePathName
+                                                , StorePathName 
                                                 , StorePathSet
                                                 , StorePathHashPart
                                                 )
@@ -92,10 +92,9 @@ addToStore
   => StorePathName        -- ^ Name part of the newly created `StorePath`
   -> NarSource MonadStore -- ^ provide nar stream
   -> Bool                 -- ^ Add target directory recursively
-  -> (FilePath -> Bool)   -- ^ Path filter function
   -> RepairFlag           -- ^ Only used by local store backend
   -> MonadStore StorePath
-addToStore name source recursive _pathFilter _repair = do
+addToStore name source recursive _repair = do
   runOpArgsIO AddToStore $ \yield -> do
     yield $ toStrict $ Data.Binary.Put.runPut $ do
       putText $ System.Nix.StorePath.unStorePathName name
