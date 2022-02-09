@@ -31,7 +31,6 @@ module System.Nix.Store.Remote
   , runStore
   , syncWithGC
   , verifyStore
-  , filePathToNar
   , module System.Nix.Store.Remote.Types
   )
 where
@@ -62,11 +61,9 @@ import qualified Data.Binary.Put
 import qualified Data.Map.Strict
 import qualified Data.Set
 
-import qualified System.Nix.Nar
 import qualified System.Nix.StorePath
 import qualified System.Nix.Store.Remote.Parsers
 
-import qualified Control.Monad.IO.Class          as IO
 import           System.Nix.Store.Remote.Binary
 import           System.Nix.Store.Remote.Types
 import           System.Nix.Store.Remote.Protocol
@@ -79,10 +76,6 @@ type CheckFlag = Bool
 type SubstituteFlag = Bool
 
 
--- | fileToNar
--- build a Source that turn file path to nar using narEffectsIO.
-filePathToNar :: forall m . IO.MonadIO m => FilePath -> NarSource m
-filePathToNar = System.Nix.Nar.streamNarIO System.Nix.Nar.narEffectsIO
 
 
 -- | Pack `Nar` and add it to the store.
