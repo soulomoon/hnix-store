@@ -23,21 +23,17 @@ import qualified System.Nix.Internal.Nar.Effects as Nar
 
 
 -- | NarSource 
--- the source to provide nar to the handler
+-- The source to provide nar to the handler `(ByteString -> m ())`.  
+-- isomorphic to ByteString by Yoneda lemma.
+-- It is done in CPS style so IO can be chunks.
 type NarSource m =  (ByteString -> m ()) -> m ()
 
 
 -- | dumpString
 -- dump a string to nar
 dumpString :: forall m . IO.MonadIO m => ByteString -> NarSource m
-dumpString text yield = do
-  yield $ str "nix-archive-1"
-  yield $ str "("
-  yield $ str "type" 
-  yield $ str "regular"
-  yield $ str "contents"
-  yield $ str text
-  yield $ str ")"
+dumpString text yield = traverse_ (yield . str) 
+  ["nix-archive-1", "(", "type" , "regular", "contents", text, ")"]
 
 
 -- | dumpPath
