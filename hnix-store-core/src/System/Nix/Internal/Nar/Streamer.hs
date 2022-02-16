@@ -49,9 +49,7 @@ dumpPath = streamNarIO Nar.narEffectsIO
 streamNarIO :: forall m . IO.MonadIO m => Nar.NarEffects IO -> FilePath -> NarSource m
 streamNarIO effs basePath yield = do
   yield $ str "nix-archive-1"
-  yield $ str "("
-  go basePath
-  yield $ str ")"
+  parens $ go basePath
  where
   go :: FilePath -> m ()
   go path = do
