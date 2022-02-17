@@ -35,8 +35,8 @@ type NarSource m =  (ByteString -> m ()) -> m ()
 -- and build a `NarSource m`. 
 dumpString 
   :: forall m. IO.MonadIO m 
-  => ByteString -- the string you want to dump
-  -> NarSource m -- The nar result in CPS style
+  => ByteString -- ^ the string you want to dump
+  -> NarSource m -- ^ The nar result in CPS style
 dumpString text yield = traverse_ (yield . str) 
   ["nix-archive-1", "(", "type" , "regular", "contents", text, ")"]
 
@@ -46,8 +46,8 @@ dumpString text yield = traverse_ (yield . str)
 -- build a Source that turn file path to nar using the default narEffectsIO.
 dumpPath 
   :: forall m . IO.MonadIO m 
-  => FilePath -- path for the file you want to dump to nar
-  -> NarSource m -- the nar result in CPS style
+  => FilePath -- ^ path for the file you want to dump to nar
+  -> NarSource m -- ^ the nar result in CPS style
 dumpPath = streamNarIO Nar.narEffectsIO
 
 
