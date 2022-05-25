@@ -49,6 +49,7 @@ mockedEnv mEnvPath fp = (fp </>) <<$>>
   , ("NIX_LOG_DIR"       , "var" </> "log")
   , ("NIX_STATE_DIR"     , "var" </> "nix")
   , ("NIX_CONF_DIR"      , "etc")
+  , ("HOME"              , "home")
 --  , ("NIX_REMOTE", "daemon")
     ] <> foldMap (\x -> [("PATH", x)]) mEnvPath
 
@@ -63,7 +64,7 @@ waitSocket fp x = do
 
 writeConf :: FilePath -> IO ()
 writeConf fp =
-  writeFile fp $ toString $ unlines
+  writeFileText fp $ unlines
     [ "build-users-group = "
     , "trusted-users = root"
     , "allowed-users = *"
@@ -260,9 +261,3 @@ spec_protocol = Hspec.around withNixDaemon $
         path <- dummy
         liftIO $ print path
         isValidPathUncached path `shouldReturn` True
-
-    context "derivation" $
-      itRights "build derivation" $
-        withDerivation $ \path drv -> do
-          result <- buildDerivation path drv Normal
-          result `shouldSatisfy` ((== AlreadyValid) . status)
